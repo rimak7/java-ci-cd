@@ -1,14 +1,131 @@
-name: java api App CI/CD
+Armande Kouadio
+armandekouadio_48127
+Online
+
+Armande Kouadio
+ started a call that lasted an hour. — 12/3/2025 11:03 PM
+Armande Kouadio — 12/4/2025 7:29 PM
+Hello Carel,  how are you doing ?
+Carel T — 12/4/2025 7:30 PM
+Hi Armande am good and you ?
+Armande Kouadio — 12/4/2025 7:30 PM
+Troubleshooting Scenario 
+
+One troubleshooting issue I faced was during the build step when pytest failed with an error saying it couldn’t find a specific Python file. The developer had created the file locally but forgot to push it to the version control system. I reviewed the pipeline logs, identified which file was missing, and communicated with the developer. After they committed the missing file, the pipeline ran successfully.
+This is what I was asking yesterday about building the python base-app
+Carel T — 12/4/2025 7:34 PM
+please give me a minute
+Armande Kouadio — 12/4/2025 7:35 PM
+Armande Kouadio — 12/4/2025 7:35 PM
+No problem
+Carel T — 12/4/2025 7:42 PM
+ok please can i call you ?
+Armande Kouadio — 12/4/2025 7:42 PM
+Yes
+Carel T
+ started a call that lasted 3 hours. — 12/4/2025 7:42 PM
+Carel T — 12/4/2025 7:43 PM
+can you hear me ?
+Carel T — 12/4/2025 8:03 PM
+https://meet.google.com/kbh-bhxv-hko
+Meet
+Real-time meetings by Google. Using your browser, share your video, desktop, and presentations with teammates and customers.
+Image
+https://discord.gg/F2zzVxCC
+Utrains Study Group*
+Utrains Study Group*
+4 Online
+8 Members
+Est. Nov 2025
+
+Go to Server
+Carel T — 12/4/2025 9:14 PM
+git fetch = See what changed in the remote repo before updating your own branch.
+Armande Kouadio — 12/5/2025 7:41 AM
+Hello Carel, how are you doing this morning? Here is my résumé. I will still remove and add some points later to match exactly what I learned here, but this is my template and my base. So I’m not stressing about the résumé anymore. I just need to adjust what needs to be changed, and that’s it. 
+Attachment file type: acrobat
+Armande_upRes.pdf
+275.98 KB
+Carel T — 12/5/2025 8:03 AM
+Hello Armande.
+Thank you very much.
+Armande Kouadio — 12/5/2025 8:09 AM
+You’re welcome ☺️
+!
+Carel T — 12/5/2025 8:23 AM
+🙏🏾
+🙏🏾
+🙏🏾
+Armande Kouadio — 12/5/2025 8:08 PM
+Hello , can you please send me the link ?
+Carel T — 12/5/2025 8:08 PM
+Forwarded
+https://meet.google.com/ppm-npnj-veg
+Meet
+Real-time meetings by Google. Using your browser, share your video, desktop, and presentations with teammates and customers.
+Image
+
+Utrains Study Group*  •  Friday
+hI
+Armande Kouadio — 12/5/2025 11:25 PM
+Image
+Image
+Image
+Image
+Après les échanges , j’ai fais  des recherches sur ChatGPT  et voici ce que j’ai trouvé .
+Carel T — 12/5/2025 11:27 PM
+je peux t'appeler ?
+Armande Kouadio — 12/5/2025 11:27 PM
+Yes
+Carel T
+ started a call that lasted 2 hours. — 12/5/2025 11:27 PM
+Carel T — 12/5/2025 11:36 PM
+Forwarded
+Image
+
+Utrains Study Group*  •  11/24/2025
+Carel T — 12/5/2025 11:44 PM
+Forwarded
+Image
+
+Utrains Study Group*  •  11/24/2025
+Armande Kouadio — 12/6/2025 12:01 AM
+Image
+Image
+Image
+Carel T — 12/6/2025 12:45 AM
+Image
+Armande Kouadio — 12/6/2025 6:54 PM
+Hello  Carel
+How are you doing ?
+Carel T — 12/6/2025 7:55 PM
+Hi Armande
+Armande Kouadio — Yesterday at 10:32 AM
+Good morning Carel , how are you doing? 
+can you please send me the diagram of project 1 ? I don’t find mine anywhere. Thanks 
+Carel T — Yesterday at 10:33 AM
+Hi Armande am good thank you and you ?
+Ok sure
+Attachment file type: unknown
+AWS_project_1.drawio
+29.71 KB
+Armande Kouadio — Yesterday at 10:39 AM
+I am doing great ! Thank you
+Armande Kouadio — 9:05 PM
+Hello Carel can you please send me your yml file ? i wasn't here for a moment . thanks
+Carel T — 9:06 PM
+ok
+name: Java api App CI/CD
 
 on:
   pull_request:
-    branches:
-      - main  
-  push:
-    branches:
-      - main
-
-     
+    branches: 
+      
+main
+dev
+push:
+  branches:
+main
 
 permissions:
   id-token: write
@@ -18,12 +135,113 @@ env:
   ARTIFACTORY_URL: ${{ secrets.ARTIFACT_URL }}
   SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
   SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-  ECR_ROLE: ${{ secrets.ECR_ACESS_ROLE }}
+  ECR_ROLE: ${{ secrets.ECR_ACCESS_ROLE }}
+  AWS_REGION: ${{ secrets.AWS_REGION }}
+  VAULT_URL: ${{ secrets.VAULT_URL }}
+  VAULT_TOKEN: ${{ secrets.VAULT_TOKEN }}
+  JFROG_REPO_NAME: utc-app
+
+jobs:
+
+  sonar:
+    runs-on: ubuntu-latest
+    steps:
+      
+uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+      
+name: Set up JDK 17
+      uses: actions/setup-java@v3
+      with:
+        distribution: 'temurin'
+        java-version: 17
+        cache: 'maven'
+
+      
+name: Cache Maven package
+      uses: actions/cache@v4
+      with:
+        path: ~/.m2
+        key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+        restore-keys: ${{ runner.os }}-m2
+
+      
+name: Build with Maven
+      run: mvn -B clean verify
+name: Cache SonarQube package
+uses: actions/cache@v4
+with:
+  path: ~/.sonar/cache
+  key: ${{ runner.os }}-sonar
+  restore-keys: ${{ runner.os }}-sonar
+
+      
+name: Cache Maven packages
+      uses: actions/cache@v4
+      with:
+        path: ~/.m2
+        key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+        restore-keys: ${{ runner.os }}-m2
+
+      
+name: SonarQube Scan
+      env:#GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        SONAR_TOKEN: ${{ env.SONAR_TOKEN }}
+        SONAR_HOST_URL: ${{ env.SONAR_HOST_URL }}#run: mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=geo_app -Dsonar.qualitygate.wait=true
+      run:  mvn verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=utc_app -Dsonar.projectName=utc_app
+hi Armande
+you got it ?
+Armande Kouadio — 9:14 PM
+yes thank you
+Image
+Carel T — 9:14 PM
+cool
+you are welcome
+Armande Kouadio — 9:47 PM
+my laptop turned off lol please send me your pipeline copy . omg
+Carel T — 9:47 PM
+the yml file ?
+Armande Kouadio — 9:47 PM
+yes
+Carel T — 9:47 PM
+name: Java api App CI/CD
+
+on:
+  pull_request:
+    branches: 
+      - main
+Expand
+message.txt
+5 KB
+﻿
+Carel T
+carel2025
+name: Java api App CI/CD
+
+on:
+  pull_request:
+    branches: 
+      - main
+      - dev  
+  push:
+    branches:
+      - main
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  ARTIFACTORY_URL: ${{ secrets.ARTIFACT_URL }}
+  SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+  SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+  ECR_ROLE: ${{ secrets.ECR_ACCESS_ROLE }}
   AWS_REGION: ${{ secrets.AWS_REGION }}
   VAULT_URL: ${{ secrets.VAULT_URL }}  
   VAULT_TOKEN: ${{ secrets.VAULT_TOKEN }}   
-  JFROG_REPO_NAME: project-geo  
-
+  JFROG_REPO_NAME: utc-app  
 
 jobs:
 
@@ -67,99 +285,74 @@ jobs:
 
       - name: SonarQube Scan
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          #GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ env.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ env.SONAR_HOST_URL }}
         #run: mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=geo_app -Dsonar.qualitygate.wait=true
-        run:  mvn verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=geo_app -Dsonar.projectName=geo_app 
-docker:
+        run:  mvn verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=utc_app -Dsonar.projectName=utc_app
+  build:
     runs-on: ubuntu-latest
     needs: sonar
-    outputs:
-      ecr_registry: ${{ steps.login-ecr.outputs.registry }}
+    
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v4
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
         with:
-          role-to-assume: ${{ env.ECR_ROLE }}
-          aws-region: ${{ env.AWS_REGION }}
+          distribution: 'temurin'
+          java-version: 17
+          cache: 'maven'
 
-      - name: Download JAR file artifact
-        uses: actions/download-artifact@v4
+      - name: Package with Maven
+        run: mvn -B clean package
+
+      - name: Upload JAR file
+        uses: actions/upload-artifact@v4
         with:
-          name: geo_app-jar
-          path: target/
+          name: utc_app-jar
+          path: target/*.jar      
 
-      - name: Login to Amazon ECR
-        id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v2
+  push_to_jfrog:
+   runs-on: ubuntu-latest
+   needs: build
+   steps:
+     - name: Checkout Code
+       uses: actions/checkout@v4
+       with:
+         fetch-depth: 0
 
-      - name: Build Docker image
-        run: |
-          docker build -t geo_app:${{ github.sha }} .
-      
-      # Trivy Scan for Vulnerabilities
-      - name: Scan Docker image with Trivy
-        uses: aquasecurity/trivy-action@master
-        with:
-          image-ref: geo_app:${{ github.sha }}
-          format: table  # can also use 'json' or 'sarif'
-          #exit-code: 1   # fail job if vulnerabilities are found
-          severity: CRITICAL,HIGH  # only report high/critical issues
+     - name: Download JAR file artifact
+       uses: actions/download-artifact@v4
+       with:
+         name: utc_app-jar
+         path: target/
 
-      - name: Tag image for ECR
-        run: |
-          APP_VERSION=$(grep -m2 '<version>' pom.xml | tail -1 | grep -oP '(?<=>).*(?=<)')
-          docker tag geo_app:${{ github.sha }} ${{ steps.login-ecr.outputs.registry }}/geo_app:$APP_VERSION
+     # Load secrets from Vault and set as env variables for rest of job
+     - name: Read secrets from Vault
+       uses: hashicorp/vault-action@v2
+       with:
+         url: ${{ secrets.VAULT_URL }}
+         method: token
+         token: ${{ secrets.VAULT_TOKEN }}
+         exportEnv: true
+         secrets: |
+          secrets/creds/jfrog username | MAVEN_USERNAME_A ;
+          secrets/creds/jfrog password | MAVEN_PASSWORD_A
 
-      - name: Push Docker image to ECR
-        run: |
-          APP_VERSION=$(grep -m2 '<version>' pom.xml | tail -1 | grep -oP '(?<=>).*(?=<)')
-          docker push ${{ steps.login-ecr.outputs.registry }}/geo_app:$APP_VERSION
+     - name: Push to JFrog
+       env:
+         MAVEN_USERNAME_A: ${{ env.MAVEN_USERNAME_A }}
+         MAVEN_PASSWORD_A: ${{ env.MAVEN_PASSWORD_A }}
+       run: |
+        APP_VERSION=$(grep -m2 '<version>' pom.xml | tail -1 | grep -oP '(?<=>).*(?=<)')
+        APP_NAME=$(grep -m2 '<artifactId>' pom.xml | tail -1 | grep -oP '(?<=>).*(?=<)')
+        APP_LONG_NAME=$APP_NAME-$APP_VERSION.jar
+        echo "Deploying $APP_LONG_NAME to Artifactory..."
+        curl -v --user $MAVEN_USERNAME_A:$MAVEN_PASSWORD_A \
+          -T target/$APP_LONG_NAME \
+          -X PUT "$ARTIFACTORY_URL/artifactory/$JFROG_REPO_NAME/$APP_LONG_NAME"
+          
 
-  deploy:
-    runs-on: ubuntu-latest
-    needs: sonar
-
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Download JAR file artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: geo_app-jar
-          path: target/
-
-      # Load secrets from Vault and set as env variables for rest of job
-      - name: Read secrets from Vault
-        uses: hashicorp/vault-action@v2
-        with:
-          url: ${{ secrets.VAULT_URL }}
-          method: token
-          token: ${{ secrets.VAULT_TOKEN }}
-          exportEnv: true
-          secrets: |
-            secrets/creds/jfrog username | MAVEN_USERNAME_A ;
-            secrets/creds/jfrog password | MAVEN_PASSWORD_A
-
-      - name: Deploy to JFrog
-        env:
-          MAVEN_USERNAME_A: ${{ env.MAVEN_USERNAME_A }}
-          MAVEN_PASSWORD_A: ${{ env.MAVEN_PASSWORD_A }}
-        run: |
-          APP_VERSION=$(grep -m2 '<version>' pom.xml | tail -1 | grep -oP '(?<=>).*(?=<)')
-          APP_NAME=$(grep -m2 '<artifactId>' pom.xml | tail -1 | grep -oP '(?<=>).*(?=<)')
-          APP_LONG_NAME=$APP_NAME-$APP_VERSION.jar
-
-          echo "Deploying $APP_LONG_NAME to Artifactory..."
-          curl -v --user $MAVEN_USERNAME_A:$MAVEN_PASSWORD_A \
-            -T target/$APP_LONG_NAME \
-            -X PUT "$ARTIFACTORY_URL/artifactory/GEOLOCATION-GITHUB_ACTION/$APP_LONG_NAME"
