@@ -19,8 +19,7 @@ env:
   ECR_ROLE: ${{ secrets.ECR_ACESS_ROLE }}
   AWS_REGION: ${{ secrets.AWS_REGION }}
   VAULT_URL: ${{ secrets.VAULT_URL }}  
-  VAULT_TOKEN: ${{ secrets.VAULT_TOKEN }} 
-  MAVEN_USERNAME_A:  
+  VAULT_TOKEN: ${{ secrets.VAULT_TOKEN }}   
   JFROG_REPO_NAME: utc-app
 
 jobs:
