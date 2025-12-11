@@ -148,7 +148,7 @@ jobs:
           APP_VERSION=$(grep -m2 '<version>' pom.xml | tail -1 | grep -oP '(?<=>).*(?=<)')
           docker push ${{ steps.login-ecr.outputs.registry }}/geo_app:$APP_VERSION
 
-   deploy:
+  deploy:
     runs-on: ubuntu-latest
     needs: [sonar , docker]
 
@@ -308,53 +308,53 @@ jobs:
             "$ARTIFACTORY_URL/artifactory/$HELM_REPO/${CHART_NAME}-$APP_VERSION.tgz"
 
 
-push_to_jfrog:
+  push_to_jfrog:
    runs-on: ubuntu-latest
    needs: build
    steps:
-     - name: Checkout Code
-       uses: actions/checkout@v4
-       with:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
          fetch-depth: 0
 
-     - name: Download JAR file artifact
-       uses: actions/download-artifact@v4
-       with:
-         name: utc-app-jar
-         path: target/
+      - name: Download JAR file artifact
+        uses: actions/download-artifact@v4
+        with:
+      - name: utc-app-jar
+        path: target/
 
-       deploy_jfrog:
+deploy_jfrog:
    runs-on: ubuntu-latest
    needs: build
    steps:
-     - name: Checkout Code
-       uses: actions/checkout@v4
-       with:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
          fetch-depth: 0
 
-     - name: Download JAR file artifact
-       uses: actions/download-artifact@v4
-       with:
-         name: utc-app-jar
-         path: target/
+      - name: Download JAR file artifact
+        uses: actions/download-artifact@v4
+        with:
+        name: utc-app-jar
+        path: target/
 
      # Load secrets from Vault and set as env variables for rest of job
-     - name: Read secrets from Vault
-       uses: hashicorp/vault-action@v2
-       with:
-         url: ${{ secrets.VAULT_URL }}
-         method: token
-         token: ${{ secrets.VAULT_TOKEN }}
-         exportEnv: true
-         secrets: |
+      - name: Read secrets from Vault
+        uses: hashicorp/vault-action@v2
+        with:
+        url: ${{ secrets.VAULT_URL }}
+        method: token
+        token: ${{ secrets.VAULT_TOKEN }}
+        exportEnv: true
+        secrets: |
           secrets/creds/jfrog username | MAVEN_USERNAME_A ;
           secrets/creds/jfrog password | MAVEN_PASSWORD_A
 
-     - name: Deploy to JFrog
-       env:
+      - name: Deploy to JFrog
+        env:
          MAVEN_USERNAME_A: ${{ env.MAVEN_USERNAME_A }}
          MAVEN_PASSWORD_A: ${{ env.MAVEN_PASSWORD_A }}
-       run: |
+        run: |
         APP_VERSION=$(grep -m2 '<version>' pom.xml | tail -1 | grep -oP '(?<=>).*(?=<)')
         APP_NAME=$(grep -m2 '<artifactId>' pom.xml | tail -1 | grep -oP '(?<=>).*(?=<)')
         APP_LONG_NAME=$APP_NAME-$APP_VERSION.jar
