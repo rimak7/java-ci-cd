@@ -148,7 +148,7 @@ jobs:
           APP_VERSION=$(grep -m2 '<version>' pom.xml | tail -1 | grep -oP '(?<=>).*(?=<)')
           docker push ${{ steps.login-ecr.outputs.registry }}/geo_app:$APP_VERSION
 
-  deploy:
+   deploy:
     runs-on: ubuntu-latest
     needs: [sonar , docker]
 
