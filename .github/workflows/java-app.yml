@@ -19,7 +19,8 @@ env:
   ECR_ROLE: ${{ secrets.ECR_ACESS_ROLE }}
   AWS_REGION: ${{ secrets.AWS_REGION }}
   VAULT_URL: ${{ secrets.VAULT_URL }}  
-  VAULT_TOKEN: ${{ secrets.VAULT_TOKEN }}   
+  VAULT_TOKEN: ${{ secrets.VAULT_TOKEN }} 
+  MAVEN_USERNAME_A:  
   JFROG_REPO_NAME: utc-app
 
 jobs:
@@ -121,11 +122,12 @@ jobs:
          token: ${{ secrets.VAULT_TOKEN }}
          exportEnv: true
          secrets: |
-           secrets/creds/jfrog username | MAVEN_USERNAME_A 
-           secrets/creds/jfrog password | MAVEN_PASSWORD_A
+
+           secrets/data/creds/jfrog username | MAVEN_USERNAME_A ;
+           secrets/data/creds/jfrog password | MAVEN_PASSWORD_A
 
       - name: Deploy to JFrog
-        env:
+        env: 
           MAVEN_USERNAME_A: ${{ env.MAVEN_USERNAME_A }}
           MAVEN_PASSWORD_A: ${{ env.MAVEN_PASSWORD_A }}
         run: |
