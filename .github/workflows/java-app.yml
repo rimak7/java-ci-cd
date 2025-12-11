@@ -48,8 +48,8 @@ jobs:
       - name: Build with Maven
         run: |
           mvn -B clean verify
-          mvn clean install sonar:sonar -X
-          mvn clean install -Dsonar.skip=true
+        #   mvn clean install sonar:sonar -X
+        #   mvn clean install -Dsonar.skip=true
            
       
       - name: Cache SonarQube package
