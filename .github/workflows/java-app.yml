@@ -92,5 +92,5 @@ jobs:
       - name: Upload JAR file
         uses: actions/upload-artifact@v4
         with:
-          name: geo_app-jar
+          name: utc_app-jar
           path: target/*.jar  
