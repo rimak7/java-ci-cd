@@ -48,10 +48,7 @@ jobs:
       - name: Build with Maven
         run: |
           mvn -B clean verify
-        #   mvn clean install sonar:sonar -X
-        #   mvn clean install -Dsonar.skip=true
-           
-      
+        
       - name: Cache SonarQube package
         uses: actions/cache@v4
         with:
@@ -72,4 +69,4 @@ jobs:
           SONAR_TOKEN: ${{ env.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ env.SONAR_HOST_URL }}
         #run: mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=geo_app -Dsonar.qualitygate.wait=true
-        run:  mvn verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=geo_app -Dsonar.projectName=geo_app
+        run:  mvn verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=utc_app -Dsonar.projectName=utc_app
