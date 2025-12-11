@@ -9,9 +9,9 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com.spring</groupId>
-	<artifactId>bioMedical</artifactId>
+	<artifactId>utc-app</artifactId>
 	<version>1.0.8</version>
-	<name>bioMedical</name>
+	<name>utc-app</name>
 	<description>Demo project for Spring Boot</description>
 	<packaging>jar</packaging>
 
