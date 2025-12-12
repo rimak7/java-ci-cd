@@ -122,7 +122,7 @@ jobs:
          exportEnv: true
          secrets: |
           secrets/creds/jfrog username | MAVEN_USERNAME_A ;
-          secrets/creds/jfrog password | MAVEN_PASSWORD_A
+          secrets/creds/jfrog password | MAVEN_PASSWORD_A ;
 
       - name: Deploy to JFrog
         env: 
