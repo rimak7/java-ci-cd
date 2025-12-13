@@ -22,6 +22,7 @@ env:
   AWS_REGION: ${{ secrets.AWS_REGION }}
   VAULT_URL: ${{ secrets.VAULT_URL }}  
   VAULT_TOKEN: ${{ secrets.VAULT_TOKEN }}   
+  AWS_ROLE_ARN: ${{ secrets.AWS_ROLE_ARN}}
   JFROG_REPO_NAME: utc-app
 
 jobs:
