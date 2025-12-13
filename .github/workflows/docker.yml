@@ -20,6 +20,11 @@ env:
   SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
   ECR_ROLE: ${{ secrets.ECR_ACESS_ROLE }}
   AWS_REGION: ${{ secrets.AWS_REGION }}   
+  ACCOUNT_ID: ${{ secrets.ACCOUNT_ID }}
+  ECR_REPO: ${{ secrets.ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com/dev
+  IMAGE_TAG:  ${{ github.sha }}
+  IMAGE_NAME: utc-app
+
   JFROG_REPO_NAME: utc-app
   # === CONFIGURATION END ===
 jobs:
@@ -72,47 +77,37 @@ jobs:
         #run: mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=utc-app -Dsonar.qualitygate.wait=true
         run:  mvn verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=utc-app -Dsonar.projectName=utc-app
 
- build-and-push:
-    needs: sonar
-    runs-on: ubuntu-latest
+ docker:
+  needs: sonar
+  runs-on: Ubuntu-latest
+  steps:
 
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      # 1. Login to AWS using OIDC (Recommended Secure Method)
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v4
+      - name: Configure AWS credentials using OIDC
+        uses: aws-actions/configure-aws-credentials@v2
         with:
-          role-to-assume: ${{ env.AWS_ROLE_ARN }}
+          role-to-assume: ${{ secrets.ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
 
-      # 2. Get ECR login token
+
       - name: Login to Amazon ECR
         id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v2
+        uses: aws-actions/amazon-ecr-login@v1
 
-      # 3. Setup Docker Buildx (Optional but recommended for modern builds)
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      # 4. Build, Tag, and Push the Docker image
-      - name: Build and Push Docker Image
-        uses: docker/build-push-action@v5
-        with:
-          context: . # Build context is the current directory
-          file: ${{ env.DOCKERFILE_PATH }}
-          push: true
-          tags: |
-            # Tag with the full ECR URI + commit SHA
-            ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ github.sha }}
-            # Tag with 'latest'
-            ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:latest
-          # Optional: Use cache for faster subsequent builds
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
-      - name: Deployment Success Message
+      - name: Build Docker image
         run: |
-          echo "Image successfully pushed to ECR:"
-          echo "${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ github.sha }}"
+          docker build -t ${{ env.IMAGE_NAME }} .
+      - name: Tag Docker image    
+        run: |
+          docker tag ${{ env.IMAGE_NAME }}:latest ${{ env.ECR_REPOSITORY }}:${{ env.IMAGE_TAG }}
+         
+      - name: Scan Docker image with Trivy
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ${{ env.ECR_REPOSITORY }}:${{ env.IMAGE_TAG }}
+          format: table
+          exit-code: '1' 
+          severity: CRITICAL,HIGH
+
+      - name: Push Docker image to Amazon ECR
+        run: |
+          docker push ${{ env.ECR_REPOSITORY }}:${{ env.IMAGE_TAG }}
