@@ -11,11 +11,16 @@ permissions:
   contents: read  # Required for actions/checkout
 
 env:
-  # === CONFIGURATION START ===
-  AWS_REGION: us-east-1                  # Replace with your AWS Region
+  # === CONFIGURATION START ==                 # Replace with your AWS Region
   ECR_REPOSITORY: utc-app       # Replace with your ECR repository name
   AWS_ROLE_ARN: ${{ secrets.AWS_ROLE_ARN }} # Replace with your IAM Role ARN
   DOCKERFILE_PATH: ./Dockerfile          # Path to your Dockerfile (usually root)
+  ARTIFACTORY_URL: ${{ secrets.ARTIFACT_URL }}
+  SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+  SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+  ECR_ROLE: ${{ secrets.ECR_ACESS_ROLE }}
+  AWS_REGION: ${{ secrets.AWS_REGION }}   
+  JFROG_REPO_NAME: utc-app
   # === CONFIGURATION END ===
 jobs:
 
