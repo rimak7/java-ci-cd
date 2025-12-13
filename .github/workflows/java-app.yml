@@ -112,7 +112,7 @@ jobs:
          name: utc-app-jar
          path: target/
 
-     # Load secrets from Vault and set as env variables for rest of job
+     
       - name: Read secrets from Vault
         uses: hashicorp/vault-action@v2
         with:
