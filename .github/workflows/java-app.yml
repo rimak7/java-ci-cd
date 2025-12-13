@@ -128,22 +128,15 @@ jobs:
 
 
      - name: Configure JFrog CLI
-       run: |
-          jfrog rt c default --url=$ARTIFACTORY_URL --user=$MAVEN_USERNAME_A --password=$MAVEN_PASSWORD_A --overwrite=true
+       run: jfrog rt c default --url=$ARTIFACTORY_URL --user=$MAVEN_USERNAME_A --password=$MAVEN_PASSWORD_A --overwrite=true
+       env:
+          MAVEN_USERNAME_A: ${{ env.MAVEN_USERNAME_A }}
+          MAVEN_PASSWORD_A: ${{ env.MAVEN_PASSWORD_A }}
 
-     - name: Deploy to JFrog
-       env:
-         MAVEN_USERNAME_A: ${{ env.MAVEN_USERNAME_A }}
-         MAVEN_PASSWORD_A: ${{ env.MAVEN_PASSWORD_A }}
-       run: |
-         # Extract metadata from pom.xml
-          APP_VERSION=$(grep -m2 '<version>' pom.xml | tail -1 | grep -oP '(?<=>).*(?=<)')
-          APP_NAME=$(grep -m2 '<artifactId>' pom.xml | tail -1 | grep -oP '(?<=>).*(?=<)')
-          APP_LONG_NAME=$APP_NAME-$APP_VERSION.jar
-
-          echo "Deploying $APP_LONG_NAME to Artifactory repo: $JFROG_REPO_NAME"
-
-          # Use JFrog CLI to upload. 
-          # It automatically maps the JAR to the correct Maven GAV path.
-          jfrog rt upload "target/utc-app-jar/$APP_LONG_NAME" "$JFROG_REPO_NAME/"
-
+      # Deploy to JFrog (This step will now execute)
+     - name: Deploy Artifact to Artifactory
+       run: |
+          APP_VERSION=$(grep -m2 '<version>' pom.xml | tail -1 | grep -oP '(?<=>).*(?=<)')
+          APP_NAME=$(grep -m2 '<artifactId>' pom.xml | tail -1 | grep -oP '(?<=>).*(?=<)')
+          APP_LONG_NAME=$APP_NAME-$APP_VERSION.jar
+          jfrog rt upload "target/utc-app-jar/$APP_LONG_NAME" "$JFROG_REPO_NAME/" --target-archive-pattern=true
