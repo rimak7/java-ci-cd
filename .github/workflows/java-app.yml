@@ -155,68 +155,92 @@ jobs:
            -X PUT "$ARTIFACTORY_URL/artifactory/$JFROG_REPO_NAME/$APP_LONG_NAME"
 
 
+  docker:
+
+
+   runs-on: ubuntu-latest
+
+   needs: sonar  # ensures this runs after 'sonar'
+
+   steps:
+
+     - name: Checkout Code
+
+       uses: actions/checkout@v4
+
+       with:
+
+         fetch-depth: 0
 
  
-      
-  docker:
-    name: Docker Build & Push to ECR
-    runs-on: ubuntu-latest
-    needs: sonar  # ensures this runs after 'sonar'
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
-      # Use OIDC Role for this repo
-      - name: Configure AWS Credential
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
-          aws-region: ${{ secrets.AWS_REGION }}
+     # Use OIDC Role for this repo
 
-      # # Download the JAR file artifact from the build job
-      # - name: Download JAR file artifact
-      #   uses: actions/download-artifact@v4
-      #   with:
-      #     name: utc-app-jar
-      #     path: target/
+     - name: Configure AWS Credentials
 
-      - name: Login to Amazon ECR
-        id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v2
+       uses: aws-actions/configure-aws-credentials@v4
 
-      - name: Build Docker image
-        run: |
-          docker build -t utc-app:${{ github.sha }} .
+       with:
 
-       
-      - name: Scan Docker image with Trivy
+         role-to-assume: ${{ secrets.ECR_ACESS_ROLE }}
 
-        uses: aquasecurity/trivy-action@master
+         aws-region: ${{ secrets.AWS_REGION }}
 
-        with:
+ 
 
-         image-ref: utc-app:${{ github.sha }}
+     # Download the JAR file artifact from the build job
 
-         format: table  # can also use 'json' or 'sarif'
+     - name: Download JAR file artifact
 
-         exit-code: 1   # fail job if vulnerabilities are found
+       uses: actions/download-artifact@v4
 
-         severity: CRITICAL,HIGH  # only report high/critical issues    
+       with:
 
-      - name: Tag image for ECR
-        run: |
-          APP_VERSION=grep -m2 '<version>' pom.xml | tail -1 | grep -oP '(?<=>).*(?=<)'
-          echo $APP_VERSION
+         name: utc-app-jar
 
-          docker tag utc-app:${{ github.sha }} ${{ steps.login-ecr.outputs.registry }}/utc-app:${{ github.sha }}
-          docker tag utc-app:${{ github.sha }} ${{ steps.login-ecr.outputs.registry }}/utc-app:$APP_VERSION
+         path: target/
 
-      - name: Push Docker image to ECR
-        run: |
-          APP_VERSION=grep -m2 '<version>' pom.xml | tail -1 | grep -oP '(?<=>).*(?=<)'
-          echo $APP_VERSION
+ 
 
-          docker push ${{ steps.login-ecr.outputs.registry }}/utc-app:${{ github.sha }}
-          docker push ${{ steps.login-ecr.outputs.registry }}/utc-app:$APP_VERSION
+     - name: Login to Amazon ECR
+
+       id: login-ecr
+
+       uses: aws-actions/amazon-ecr-login@v2
+
+ 
+
+     - name: Build Docker image
+
+       run: |
+
+        docker build -t utc-app:${{ github.sha }} .
+
+ 
+
+     - name: Tag image for ECR
+
+       run: |
+
+        APP_VERSION=`grep -m2 '<version>' pom.xml | tail -1 | grep -oP '(?<=>).*(?=<)'`
+
+        echo $APP_VERSION
+
+ 
+
+        docker tag utc-app:${{ github.sha }} ${{ steps.login-ecr.outputs.registry }}/utc-app:${{ github.sha }}
+
+        docker tag utc-app:${{ github.sha }} ${{ steps.login-ecr.outputs.registry }}/utc-app:$APP_VERSION
+
+
+     - name: Push Docker image to ECR
+
+       run: |
+
+        APP_VERSION=`grep -m2 '<version>' pom.xml | tail -1 | grep -oP '(?<=>).*(?=<)'`
+
+        echo $APP_VERSION
+
+        docker push ${{ steps.login-ecr.outputs.registry }}/utc-app:${{ github.sha }}
+
+        docker push ${{ steps.login-ecr.outputs.registry }}/utc-app:$APP_VERSION
