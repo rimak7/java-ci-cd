@@ -125,30 +125,16 @@ jobs:
            secrets/creds/jfrog username | MAVEN_USERNAME_A ;
            secrets/creds/jfrog password | MAVEN_PASSWORD_A
 
-
-
-
-     - name: Setup JFrog CLI
-       uses: jfrog/setup-jfrog-cli@v4
+     - name: Deploy to JFrog
        env:
-        JF_URL: ${{ secrets.ARTIFACT_URL }}          # example: https://xxxx.jfrog.io
-        JF_ACCESS_TOKEN: ${{ secrets.JF_ACCESS_TOKEN }} # recommended over username/password
-
-     - name: Upload JAR to Artifactory
+         MAVEN_USERNAME_A: ${{ env.MAVEN_USERNAME_A }}
+         MAVEN_PASSWORD_A: ${{ env.MAVEN_PASSWORD_A }}
        run: |
-        jfrog rt u "target/*.jar" "${JFROG_REPO_NAME}/" --flat=true
-
-
-    #  - name: Deploy to JFrog
-    #    env:
-    #      MAVEN_USERNAME_A: ${{ env.MAVEN_USERNAME_A }}
-    #      MAVEN_PASSWORD_A: ${{ env.MAVEN_PASSWORD_A }}
-    #    run: |
-    #     APP_VERSION=$(grep -m2 '<version>' pom.xml | tail -1 | grep -oP '(?<=>).*(?=<)')
-    #     APP_NAME=$(grep -m2 '<artifactId>' pom.xml | tail -1 | grep -oP '(?<=>).*(?=<)')
-    #     APP_LONG_NAME=$APP_NAME-$APP_VERSION.jar
-    #     echo "Deploying $APP_LONG_NAME to Artifactory..."
-    #     curl -v --user $MAVEN_USERNAME_A:$MAVEN_PASSWORD_A \
-    #       -T target/$APP_LONG_NAME \
-    #       -X PUT "$ARTIFACTORY_URL/artifactory/$JFROG_REPO_NAME/$APP_LONG_NAME"
+        APP_VERSION=$(grep -m2 '<version>' pom.xml | tail -1 | grep -oP '(?<=>).*(?=<)')
+        APP_NAME=$(grep -m2 '<artifactId>' pom.xml | tail -1 | grep -oP '(?<=>).*(?=<)')
+        APP_LONG_NAME=$APP_NAME-$APP_VERSION.jar
+        echo "Deploying $APP_LONG_NAME to Artifactory..."
+        curl -v --user $MAVEN_USERNAME_A:$MAVEN_PASSWORD_A \
+          -T target/$APP_LONG_NAME \
+          -X PUT "$ARTIFACTORY_URL/artifactory/$JFROG_REPO_NAME/$APP_LONG_NAME"
 
