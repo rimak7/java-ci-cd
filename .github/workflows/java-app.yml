@@ -130,6 +130,9 @@ jobs:
           MAVEN_USERNAME_A: ${{ env.MAVEN_USERNAME_A }}
           MAVEN_PASSWORD_A: ${{ env.MAVEN_PASSWORD_A }}
         run: |
+        
+          ls -lah target/
+          test -f target/$APP_LONG_NAME
           APP_VERSION=$(grep -m2 '<version>' pom.xml | tail -1 | grep -oP '(?<=>).*(?=<)')
           APP_NAME=$(grep -m2 '<artifactId>' pom.xml | tail -1 | grep -oP '(?<=>).*(?=<)')
           APP_LONG_NAME=$APP_NAME-$APP_VERSION.jar
