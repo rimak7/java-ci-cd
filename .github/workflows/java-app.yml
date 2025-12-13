@@ -112,11 +112,11 @@ jobs:
          name: utc-app-jar
          path: target/
 
-      # - name: setup JFrog CLI
-      #   uses: jfrog/setup-jfrog-cli@v4
-      #   env:
-      #     JF_URL: ${{ secrets.VAULT_URL }} 
-      #     JF_ACCESS_TOKEN: ${{ secrets.VAULT_TOKEN  }}
+      - name: setup JFrog CLI
+        uses: jfrog/setup-jfrog-cli@v4
+        env:
+          JF_URL: ${{ secrets.VAULT_URL }} 
+          JF_ACCESS_TOKEN: ${{ secrets.VAULT_TOKEN  }}
 
      
       - name: Read secrets from Vault
