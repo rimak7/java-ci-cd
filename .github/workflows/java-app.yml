@@ -68,7 +68,7 @@ jobs:
           #GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ env.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ env.SONAR_HOST_URL }}
-        #run: mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=geo_app -Dsonar.qualitygate.wait=true
+        #run: mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=utc-app -Dsonar.qualitygate.wait=true
         run:  mvn verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=utc-app -Dsonar.projectName=utc-app
 
   build:
@@ -179,7 +179,7 @@ jobs:
       - name: Download JAR file artifact
         uses: actions/download-artifact@v4
         with:
-          name: geo_app-jar
+          name: utc-app-jar
           path: target/
 
       - name: Login to Amazon ECR
@@ -188,7 +188,7 @@ jobs:
 
       - name: Build Docker image
         run: |
-          docker build -t geo_app:${{ github.sha }} .
+          docker build -t utc-app:${{ github.sha }} .
 
        
       - name: Scan Docker image with Trivy
@@ -197,7 +197,7 @@ jobs:
 
         with:
 
-         image-ref: geo_app:${{ github.sha }}
+         image-ref: utc-app:${{ github.sha }}
 
          format: table  # can also use 'json' or 'sarif'
 
@@ -210,13 +210,13 @@ jobs:
           APP_VERSION=grep -m2 '<version>' pom.xml | tail -1 | grep -oP '(?<=>).*(?=<)'
           echo $APP_VERSION
 
-          docker tag geo_app:${{ github.sha }} ${{ steps.login-ecr.outputs.registry }}/geo_app:${{ github.sha }}
-          docker tag geo_app:${{ github.sha }} ${{ steps.login-ecr.outputs.registry }}/geo_app:$APP_VERSION
+          docker tag utc-app:${{ github.sha }} ${{ steps.login-ecr.outputs.registry }}/utc-app:${{ github.sha }}
+          docker tag utc-app:${{ github.sha }} ${{ steps.login-ecr.outputs.registry }}/utc-app:$APP_VERSION
 
       - name: Push Docker image to ECR
         run: |
           APP_VERSION=grep -m2 '<version>' pom.xml | tail -1 | grep -oP '(?<=>).*(?=<)'
           echo $APP_VERSION
 
-          docker push ${{ steps.login-ecr.outputs.registry }}/geo_app:${{ github.sha }}
-          docker push ${{ steps.login-ecr.outputs.registry }}/geo_app:$APP_VERSION
+          docker push ${{ steps.login-ecr.outputs.registry }}/utc-app:${{ github.sha }}
+          docker push ${{ steps.login-ecr.outputs.registry }}/utc-app:$APP_VERSION
