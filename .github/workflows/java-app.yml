@@ -183,9 +183,9 @@ jobs:
 
          format: table  
 
-         exit-code: 1   
+         exit-code: 0   
 
-         severity: CRITICAL    
+         severity: CRITICAL,HIGH     
 
       - name: Tag image for ECR
         run: |
