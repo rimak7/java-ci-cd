@@ -131,13 +131,22 @@ jobs:
           MAVEN_PASSWORD_A: ${{ env.MAVEN_PASSWORD_A }}
         run: |
           
-          APP_VERSION=$(grep -m2 '<version>' pom.xml | tail -1 | grep -oP '(?<=>).*(?=<)')
-          APP_NAME=$(grep -m2 '<artifactId>' pom.xml | tail -1 | grep -oP '(?<=>).*(?=<)')
-          APP_LONG_NAME=$APP_NAME-$APP_VERSION.jar
-          echo "Deploying $APP_LONG_NAME to Artifactory..."
+          APP_LONG_NAME="$(mvn -q -DforceStdout help:evaluate -Dexpression=project.build.finalName).jar"
+
+          echo "Found JAR:"
+          ls -lah target/
+          test -f "target/$APP_LONG_NAME"
+
+          BASE_URL="${ARTIFACTORY_URL%/artifactory}"
+          BASE_URL="${BASE_URL%/}"
+
+          UPLOAD_URL="$BASE_URL/artifactory/$JFROG_REPO_NAME/$APP_LONG_NAME"
+          echo "Uploading to: $UPLOAD_URL"
+
           curl -v --user $MAVEN_USERNAME_A:$MAVEN_PASSWORD_A \
-          -T target/$APP_LONG_NAME \
-          -X PUT "$ARTIFACTORY_URL/artifactory/$JFROG_REPO_NAME/$APP_LONG_NAME"
+          -T "target/$APP_LONG_NAME" \
+          -X PUT "$UPLOAD_URL"
+
 
  
       
