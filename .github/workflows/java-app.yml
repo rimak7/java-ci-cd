@@ -23,6 +23,7 @@ env:
   VAULT_URL: ${{ secrets.VAULT_URL }}  
   VAULT_TOKEN: ${{ secrets.VAULT_TOKEN }}   
   AWS_ROLE_ARN: ${{ secrets.AWS_ROLE_ARN}}
+  ECR_REPOSITORY: utc-app
   JFROG_REPO_NAME: utc-app
 
 jobs:
@@ -140,163 +141,59 @@ jobs:
          -X PUT "$ARTIFACTORY_URL/artifactory/$JFROG_REPO_NAME/$APP_LONG_NAME"
 
 
-  docker:
-
-   runs-on: ubuntu-latest
-
-   needs: sonar
-
-   steps:
-
-     - name: Checkout Code
-
-       uses: actions/checkout@v4
-
-       with:
-
-         fetch-depth: 0
-
- 
-
-     - name: Configure AWS Credentials
-
-       uses: aws-actions/configure-aws-credentials@v4
-
-       with:
-
-         role-to-assume: ${{ env.ECR_ROLE }}
-
-         aws-region: ${{ env.AWS_REGION }}
-
-     - name: Download JAR file artifact
-
-       uses: actions/download-artifact@v4
-
-       with:
-
-         name: utc-app-jar
-
-         path: target/
-
-     - name: Login to Amazon ECR
-
-       id: login-ecr
-
-       uses: aws-actions/amazon-ecr-login@v2
-
-     - name: Build Docker image
-
-       run: |
-
-        docker build -t utc-app:${{ github.sha }} .
-
-
-     - name: Scan Docker image with Trivy
-
-       uses: aquasecurity/trivy-action@master
-
-       with:
-
-         image-ref: utc-app:${{ github.sha }}
-
-         format: table 
-
-         severity: CRITICAL,HIGH  
-
- 
-
-     - name: Tag image for ECR
-
-       run: |
-
-        APP_VERSION=$(grep -m2 '<version>' pom.xml | tail -1 | grep -oP '(?<=>).*(?=<)')
-
-        docker tag utc-app:${{ github.sha }} ${{ steps.login-ecr.outputs.registry }}/utc-app:${{ github.sha }}
-
-        docker tag utc-app:${{ github.sha }} ${{ steps.login-ecr.outputs.registry }}/utc-app:$APP_VERSION
-
- 
-
-     - name: Push Docker image to ECR
-
-       run: |
-
-        APP_VERSION=$(grep -m2 '<version>' pom.xml | tail -1 | grep -oP '(?<=>).*(?=<)')
-
-        docker push ${{ steps.login-ecr.outputs.registry }}/utc-app:${{ github.sha }}
-
-        docker push ${{ steps.login-ecr.outputs.registry }}/utc-app:$APP_VERSION
-
-  # deploy:
-
-  #  runs-on: ubuntu-latest
-
-  #  needs: sonar
-
- 
-
-  #  steps:
-
-  #    - name: Checkout Code
-
-  #      uses: actions/checkout@v4
-
-  #      with:
-
-  #        fetch-depth: 0
-
-
-  #    - name: Download JAR file artifact
-
-  #      uses: actions/download-artifact@v4
-
-  #      with:
-
-  #        name: utc-app-jar
-
-  #        path: target/
-
-
-  #    - name: Read secrets from Vault
-
-  #      uses: hashicorp/vault-action@v2
-
-  #      with:
-
-  #        url: http://52.32.151.162:8200
-
-  #        method: token
-
-  #        token: ${{ secrets.VAULT_TOKEN }}
-
-  #        exportEnv: true
-
-  #        secrets: |
-
-  #         secrets/creds/jfrog username | MAVEN_USERNAME_A ;
-
-  #         secrets/creds/jfrog password | MAVEN_PASSWORD_A
-
-  #   #  - name: Deploy to JFrog
-
-    #    env:
-
-    #      MAVEN_USERNAME_A: ${{ env.MAVEN_USERNAME_A }}
-
-    #      MAVEN_PASSWORD_A: ${{ env.MAVEN_PASSWORD_A }}
-
-    #    run: |
-
-    #     APP_VERSION=$(grep -m2 '<version>' pom.xml | tail -1 | grep -oP '(?<=>).*(?=<)')
-
-    #     APP_NAME=$(grep -m2 '<artifactId>' pom.xml | tail -1 | grep -oP '(?<=>).*(?=<)')
-
-    #     APP_LONG_NAME=$APP_NAME-$APP_VERSION.jar
-
-    #     echo "Deploying $APP_LONG_NAME to Artifactory..."
-
-    #     curl -v --user $MAVEN_USERNAME_A:$MAVEN_PASSWORD_A \
-
-    #       -T target/$APP_LONG_NAME \
-
-    #       -X PUT "$ARTIFACTORY_URL/artifactory/GEOLOCATION-GITHUB_ACTION/$APP_LONG_NAME"
+  build-and-push:
+    needs: sonar
+    name: Build, Tag, and Push ECR
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::YOUR_AWS_ACCOUNT_ID:role/GitHubActionsECRPushRole 
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Set image tags
+        id: set-tags
+        run: |
+          # The image tag will be the short commit SHA
+          IMAGE_TAG_SHA=$(echo $GITHUB_SHA | cut -c1-7)
+          
+          # Sets a GitHub output variable for use in later steps
+          echo "::set-output name=image_tag_sha::$IMAGE_TAG_SHA"
+          echo "::set-output name=ecr_image::$ECR_REPOSITORY:$IMAGE_TAG_SHA"
+          echo "::set-output name=ecr_latest_image::$ECR_REPOSITORY:latest"
+          
+          # ECR URI format: <AWS_ACCOUNT_ID>.dkr.ecr.<REGION>.amazonaws.com/<REPOSITORY>
+          ECR_REGISTRY_URI=${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}
+          echo "::set-output name=ecr_registry_uri::$ECR_REGISTRY_URI"
+      
+
+      - name: Build and push the Docker image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_SHA_TAG: ${{ steps.set-tags.outputs.image_tag_sha }}
+          ECR_URI: ${{ steps.set-tags.outputs.ecr_registry_uri }}
+        run: |
+          # Build with the SHA tag
+          docker build -t $ECR_URI:$IMAGE_SHA_TAG .
+          
+          # Tag with 'latest' as well
+          docker tag $ECR_URI:$IMAGE_SHA_TAG $ECR_URI:latest
+          
+          # Push both tags
+          docker push $ECR_URI:$IMAGE_SHA_TAG
+          docker push $ECR_URI:latest
+          
+      - name: Output Image URI
+        run: |
+          echo "Successfully pushed image to ECR:"
+          echo "${{ steps.set-tags.outputs.ecr_registry_uri }}:${{ steps.set-tags.outputs.image_tag_sha }}"
+          echo "${{ steps.set-tags.outputs.ecr_registry_uri }}:latest"
