@@ -113,7 +113,7 @@ jobs:
          name: utc-app-jar
          path: target/
 
-     # Load secrets from Vault and set as env variables for rest of job
+     
      - name: Read secrets from Vault
        uses: hashicorp/vault-action@v2
        with:
@@ -122,28 +122,20 @@ jobs:
          token: ${{ secrets.VAULT_TOKEN }}
          exportEnv: true
          secrets: |
-           secrets/creds/jfrog username | MAVEN_USERNAME_A ;
-           secrets/creds/jfrog password | MAVEN_PASSWORD_A
 
-    
-      # --- STEP 2: Configure the JFrog CLI connection ---
-     - name: Configure JFrog CLI
-       run: |
-          # Connect to Artifactory using credentials loaded from Vault
-          jfrog rt c default --url=$ARTIFACTORY_URL --user=$MAVEN_USERNAME_A --password=$MAVEN_PASSWORD_A --overwrite=true
+          secrets/creds/jfrog username | MAVEN_USERNAME_A ;
+          secrets/creds/jfrog password | MAVEN_PASSWORD_A
+
+     - name: Deploy to JFrog
        env:
-          MAVEN_USERNAME_A: ${{ env.MAVEN_USERNAME_A }}
-          MAVEN_PASSWORD_A: ${{ env.MAVEN_PASSWORD_A }}
-
-      # --- STEP 3: Deploy to JFrog using CLI ---
-     - name: Deploy Artifact to Artifactory
+         MAVEN_USERNAME_A: ${{ env.MAVEN_USERNAME_A }}
+         MAVEN_PASSWORD_A: ${{ env.MAVEN_PASSWORD_A }}
        run: |
-          APP_VERSION=$(grep -m2 '<version>' pom.xml | tail -1 | grep -oP '(?<=>).*(?=<)')
-          APP_NAME=$(grep -m2 '<artifactId>' pom.xml | tail -1 | grep -oP '(?<=>).*(?=<)')
-          APP_LONG_NAME=$APP_NAME-$APP_VERSION.jar
-          
-          echo "Attempting smart deployment of $APP_LONG_NAME to $JFROG_REPO_NAME..."
-          
-          # The CLI handles the correct Maven GAV path structure automatically.
-          # The source path includes the subdirectory created by actions/download-artifact.
-          jfrog rt upload "target/utc-app-jar/$APP_LONG_NAME" "$JFROG_REPO_NAME/" --target-archive-pattern=true
+        APP_VERSION=$(grep -m2 '<version>' pom.xml | tail -1 | grep -oP '(?<=>).*(?=<)')
+        APP_NAME=$(grep -m2 '<artifactId>' pom.xml | tail -1 | grep -oP '(?<=>).*(?=<)')
+        APP_LONG_NAME=$APP_NAME-$APP_VERSION.jar
+        echo "Deploying $APP_LONG_NAME to Artifactory..."
+        curl -v --user $MAVEN_USERNAME_A:$MAVEN_PASSWORD_A \
+          -T target/$APP_LONG_NAME \
+          -X PUT "$ARTIFACTORY_URL/artifactory/$JFROG_REPO_NAME/$APP_LONG_NAME"
+
