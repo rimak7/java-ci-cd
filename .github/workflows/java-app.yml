@@ -115,7 +115,7 @@ jobs:
       # 🛑 CRITICAL FIX: STEP TO INSTALL JFROG CLI (Missing before)
       # -----------------------------------------------------------
       - name: Setup JFrog CLI
-        uses: jfrog/setup-jfrog-cli@v3
+        uses: jfrog/setup-jfrog-cli@v2
         with:
           version: 2 
 
